@@ -164,41 +164,48 @@ export default function Downloader() {
           e.preventDefault();
           if (url.trim() && fetchState.status !== "loading") handleFetch();
         }}
-        className="flex flex-col gap-2 sm:flex-row"
+        className="flex flex-col gap-2.5 sm:flex-row"
       >
-        <input
-          type="url"
-          inputMode="url"
-          autoComplete="off"
-          placeholder="https://www.youtube.com/watch?v=..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none ring-red-500/40 placeholder:text-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-900 dark:placeholder:text-neutral-600"
-        />
+        <div className="relative flex-1">
+          <LinkIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
+          <input
+            type="url"
+            inputMode="url"
+            autoComplete="off"
+            placeholder="Paste a YouTube link…"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="w-full rounded-xl border border-neutral-300 bg-white py-2.5 pl-10 pr-3 text-sm shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 dark:border-neutral-700 dark:bg-neutral-900 dark:placeholder:text-neutral-600 dark:focus:border-red-500"
+          />
+        </div>
         <button
           type="submit"
           disabled={!url.trim() || fetchState.status === "loading"}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-red-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {fetchState.status === "loading" ? "Fetching…" : "Fetch info"}
+          {fetchState.status === "loading" ? (
+            <>
+              <Spinner className="h-4 w-4" />
+              Fetching…
+            </>
+          ) : (
+            "Fetch info"
+          )}
         </button>
       </form>
 
       {/* Fetch error */}
-      {fetchState.status === "error" && (
-        <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">
-          {fetchState.message}
-        </p>
-      )}
+      {fetchState.status === "error" && <Banner tone="error">{fetchState.message}</Banner>}
 
       {/* Loading skeleton */}
       {fetchState.status === "loading" && (
-        <div className="animate-pulse rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+        <div className="animate-pulse rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800">
           <div className="flex gap-4">
-            <div className="h-20 w-36 rounded-lg bg-neutral-200 dark:bg-neutral-800" />
-            <div className="flex-1 space-y-2 py-1">
+            <div className="aspect-video w-44 shrink-0 rounded-xl bg-neutral-200 dark:bg-neutral-800" />
+            <div className="flex-1 space-y-2.5 py-1">
               <div className="h-4 w-3/4 rounded bg-neutral-200 dark:bg-neutral-800" />
               <div className="h-3 w-1/2 rounded bg-neutral-200 dark:bg-neutral-800" />
+              <div className="h-3 w-1/4 rounded bg-neutral-200 dark:bg-neutral-800" />
             </div>
           </div>
         </div>
@@ -206,149 +213,200 @@ export default function Downloader() {
 
       {/* Info card + controls */}
       {info && (
-        <section className="space-y-5 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
-          <div className="flex flex-col gap-4 sm:flex-row">
-            {info.thumbnail && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={info.thumbnail}
-                alt=""
-                className="h-auto w-full rounded-lg object-cover sm:w-40"
-              />
-            )}
-            <div className="min-w-0 flex-1 space-y-1">
-              <h2 className="line-clamp-2 font-medium leading-snug">{info.title}</h2>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                {info.uploader}
-              </p>
-              <p className="text-xs text-neutral-400 dark:text-neutral-500">
-                {info.durationString}
-              </p>
+        <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900/60">
+          {/* Header: thumbnail + meta */}
+          <div className="flex flex-col gap-4 p-4 sm:flex-row">
+            <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-800 sm:w-44">
+              {info.thumbnail && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={info.thumbnail} alt="" className="h-full w-full object-cover" />
+              )}
+              {info.durationString && (
+                <span className="absolute bottom-1.5 right-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
+                  {info.durationString}
+                </span>
+              )}
             </div>
-          </div>
-
-          {/* Kind toggle */}
-          <div className="inline-flex rounded-lg border border-neutral-300 p-0.5 dark:border-neutral-700">
-            {(["video", "audio"] as DownloadKind[]).map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setKind(k)}
-                disabled={isBusy}
-                className={`rounded-md px-4 py-1.5 text-sm font-medium capitalize transition disabled:opacity-50 ${
-                  kind === k
-                    ? "bg-red-600 text-white"
-                    : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                }`}
-              >
-                {k}
-              </button>
-            ))}
-          </div>
-
-          {/* Options */}
-          {kind === "video" ? (
-            <label className="block space-y-1">
-              <span className="text-sm text-neutral-600 dark:text-neutral-300">
-                Resolution
-              </span>
-              {info.resolutions.length > 0 ? (
-                <select
-                  value={height ?? ""}
-                  onChange={(e) => setHeight(Number(e.target.value))}
-                  disabled={isBusy}
-                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900"
-                >
-                  {info.resolutions.map((r) => (
-                    <option key={r.height} value={r.height}>
-                      {r.label}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <p className="text-sm text-neutral-500">
-                  No separate video resolutions reported; best available will be used.
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <h2 className="line-clamp-2 font-semibold leading-snug">{info.title}</h2>
+              <p className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
+                <UserIcon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{info.uploader}</span>
+              </p>
+              {info.resolutions[0] && (
+                <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                  Up to {info.resolutions[0].label}
                 </p>
               )}
-              <span className="text-xs text-neutral-400">
-                Output: MP4 (video + audio merged).
-              </span>
-            </label>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <label className="space-y-1">
-                <span className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Format
-                </span>
-                <select
-                  value={audioFormat}
-                  onChange={(e) => setAudioFormat(e.target.value as AudioFormat)}
-                  disabled={isBusy}
-                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm uppercase disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900"
-                >
-                  {AUDIO_FORMATS.map((f) => (
-                    <option key={f} value={f}>
-                      {f.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="space-y-1">
-                <span className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Bitrate
-                </span>
-                <select
-                  value={audioBitrate}
-                  onChange={(e) => setAudioBitrate(Number(e.target.value))}
-                  disabled={isBusy}
-                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900"
-                >
-                  {BITRATES.map((b) => (
-                    <option key={b} value={b}>
-                      {b} kbps
-                    </option>
-                  ))}
-                </select>
-              </label>
             </div>
-          )}
+          </div>
 
-          {/* Download button */}
-          <button
-            type="button"
-            onClick={handleDownload}
-            disabled={isBusy}
-            className="w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {download.status === "starting"
-              ? "Preparing…"
-              : download.status === "active"
-                ? "Downloading…"
-                : kind === "video"
-                  ? "Download video"
-                  : "Download audio"}
-          </button>
+          {/* Controls */}
+          <div className="space-y-4 border-t border-neutral-100 p-4 dark:border-neutral-800">
+            {/* Kind toggle */}
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-neutral-100 p-1 dark:bg-neutral-800/70">
+              {([
+                { k: "video" as const, label: "Video", Icon: VideoIcon },
+                { k: "audio" as const, label: "Audio", Icon: AudioIcon },
+              ]).map(({ k, label, Icon }) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setKind(k)}
+                  disabled={isBusy}
+                  className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-1.5 text-sm font-medium transition disabled:opacity-50 ${
+                    kind === k
+                      ? "bg-white text-red-600 shadow-sm dark:bg-neutral-950 dark:text-red-400"
+                      : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </button>
+              ))}
+            </div>
 
-          {/* Progress */}
-          {(download.status === "active" || download.status === "starting") && (
-            <ProgressBar state={download} />
-          )}
+            {/* Options */}
+            {kind === "video" ? (
+              <Field label="Resolution" hint="Output: MP4 (video + audio merged)">
+                {info.resolutions.length > 0 ? (
+                  <Select
+                    value={height ?? ""}
+                    onChange={(e) => setHeight(Number(e.target.value))}
+                    disabled={isBusy}
+                  >
+                    {info.resolutions.map((r) => (
+                      <option key={r.height} value={r.height}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </Select>
+                ) : (
+                  <p className="text-sm text-neutral-500">
+                    No separate resolutions reported; best available will be used.
+                  </p>
+                )}
+              </Field>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Format">
+                  <Select
+                    value={audioFormat}
+                    onChange={(e) => setAudioFormat(e.target.value as AudioFormat)}
+                    disabled={isBusy}
+                  >
+                    {AUDIO_FORMATS.map((f) => (
+                      <option key={f} value={f}>
+                        {f.toUpperCase()}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Bitrate">
+                  <Select
+                    value={audioBitrate}
+                    onChange={(e) => setAudioBitrate(Number(e.target.value))}
+                    disabled={isBusy}
+                  >
+                    {BITRATES.map((b) => (
+                      <option key={b} value={b}>
+                        {b} kbps
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
+            )}
 
-          {download.status === "complete" && (
-            <p className="rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300">
-              Done — your file should be downloading. If not,{" "}
-              <span className="font-medium">check your browser downloads</span>.
-            </p>
-          )}
+            {/* Download button */}
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={isBusy}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-red-500 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isBusy ? (
+                <>
+                  <Spinner className="h-4 w-4" />
+                  {download.status === "starting" ? "Preparing…" : "Downloading…"}
+                </>
+              ) : (
+                <>
+                  <DownloadIcon className="h-4 w-4" />
+                  {kind === "video" ? "Download video" : "Download audio"}
+                </>
+              )}
+            </button>
 
-          {download.status === "error" && (
-            <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">
-              {download.message}
-            </p>
-          )}
+            {/* Progress */}
+            {(download.status === "active" || download.status === "starting") && (
+              <ProgressBar state={download} />
+            )}
+
+            {download.status === "complete" && (
+              <Banner tone="success">
+                Done — your file should be downloading. If not, check your browser downloads.
+              </Banner>
+            )}
+
+            {download.status === "error" && <Banner tone="error">{download.message}</Banner>}
+          </div>
         </section>
       )}
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Presentational helpers                                                      */
+/* -------------------------------------------------------------------------- */
+
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        {label}
+      </span>
+      {children}
+      {hint && <span className="block text-xs text-neutral-400 dark:text-neutral-500">{hint}</span>}
+    </label>
+  );
+}
+
+function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className="relative">
+      <select
+        {...props}
+        className="w-full appearance-none rounded-xl border border-neutral-300 bg-white px-3 py-2.5 pr-9 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950/40"
+      />
+      <ChevronIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+    </div>
+  );
+}
+
+function Banner({ tone, children }: { tone: "error" | "success"; children: React.ReactNode }) {
+  const styles =
+    tone === "error"
+      ? "border-red-300 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300"
+      : "border-green-300 bg-green-50 text-green-700 dark:border-green-900/60 dark:bg-green-950/40 dark:text-green-300";
+  return (
+    <p className={`flex items-start gap-2 rounded-xl border px-3 py-2.5 text-sm ${styles}`}>
+      {tone === "error" ? (
+        <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+      ) : (
+        <CheckIcon className="mt-0.5 h-4 w-4 shrink-0" />
+      )}
+      <span>{children}</span>
+    </p>
   );
 }
 
@@ -372,23 +430,117 @@ function ProgressBar({
     phase === "merging" || phase === "converting" || progress?.percent == null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 rounded-xl bg-neutral-50 p-3 dark:bg-neutral-800/40">
       <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
-        <span>{PHASE_LABELS[phase]}</span>
+        <span className="font-medium text-neutral-700 dark:text-neutral-200">
+          {PHASE_LABELS[phase]}
+        </span>
         <span className="tabular-nums">
-          {progress?.speed ? `${progress.speed}` : ""}
-          {progress?.eta ? ` · ETA ${progress.eta}` : ""}
-          {!indeterminate ? ` · ${percent.toFixed(1)}%` : ""}
+          {!indeterminate ? `${percent.toFixed(1)}%` : ""}
         </span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
         <div
-          className={`h-full rounded-full bg-red-600 transition-[width] duration-200 ${
+          className={`h-full rounded-full bg-gradient-to-r from-red-500 to-red-600 transition-[width] duration-300 ease-out ${
             indeterminate ? "animate-pulse" : ""
           }`}
-          style={{ width: indeterminate ? "100%" : `${percent}%` }}
+          style={{ width: indeterminate ? "100%" : `${Math.max(2, percent)}%` }}
         />
       </div>
+      {(progress?.speed || progress?.eta) && (
+        <div className="flex items-center gap-3 text-xs text-neutral-400 dark:text-neutral-500">
+          {progress?.speed && <span className="tabular-nums">{progress.speed}</span>}
+          {progress?.eta && <span className="tabular-nums">ETA {progress.eta}</span>}
+        </div>
+      )}
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Icons (inline, no dependency)                                               */
+/* -------------------------------------------------------------------------- */
+
+type IconProps = { className?: string };
+
+function LinkIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
+function DownloadIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function VideoIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="6" width="14" height="12" rx="2" />
+      <path d="m22 8-6 4 6 4V8Z" />
+    </svg>
+  );
+}
+
+function AudioIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 18V5l12-2v13" />
+      <circle cx="6" cy="18" r="3" />
+      <circle cx="18" cy="16" r="3" />
+    </svg>
+  );
+}
+
+function UserIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+function AlertIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+}
+
+function CheckIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function Spinner({ className }: IconProps) {
+  return (
+    <svg className={`animate-spin ${className ?? ""}`} viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4Z" />
+    </svg>
   );
 }

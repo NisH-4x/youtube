@@ -13,10 +13,21 @@ body {
 
 body {
   @apply bg-neutral-50 text-neutral-900 antialiased;
+  background-image: radial-gradient(
+    60rem 40rem at 50% -10%,
+    rgba(239, 68, 68, 0.06),
+    transparent 70%
+  );
+  background-attachment: fixed;
 }
 
 @media (prefers-color-scheme: dark) {
   body {
     @apply bg-neutral-950 text-neutral-100;
+    background-image: radial-gradient(
+      60rem 40rem at 50% -10%,
+      rgba(239, 68, 68, 0.1),
+      transparent 70%
+    );
   }
 }
