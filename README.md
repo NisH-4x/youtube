@@ -137,6 +137,44 @@ npm run lint        # next lint
 
 ---
 
+## Deploying
+
+> ⚠️ **This app does NOT work on Vercel / Netlify / other serverless hosts.**
+> It spawns `yt-dlp`/`ffmpeg`, streams large files, and keeps an in-memory job
+> registry across requests — none of which survive a stateless, time-limited
+> serverless function. You need a host that runs a **long-lived container/VM**
+> where you can install the binaries.
+
+The repo ships a **Dockerfile** that bundles Node + `ffmpeg` + `yt-dlp`, so the
+image "just works" anywhere Docker runs (Render, Railway, Fly.io, a VPS…).
+
+Build & run locally:
+
+```bash
+docker build -t yt-downloader .
+docker run -p 3000:3000 yt-downloader
+# → http://localhost:3000
+```
+
+**Render** (easiest free option):
+1. Push this repo to GitHub.
+2. Render → New → **Web Service** → connect the repo.
+3. Runtime: **Docker** (it auto-detects the Dockerfile). Leave build/start blank.
+4. Add env var `NEXT_PUBLIC_SITE_URL=https://<your-service>.onrender.com`.
+5. Deploy.
+
+**Railway:** New Project → Deploy from repo → it detects the Dockerfile → add
+the same `NEXT_PUBLIC_SITE_URL` env var → deploy.
+
+**Fly.io:** `fly launch` (uses the Dockerfile) → `fly deploy`.
+
+> **Do NOT set `YTDLP_PATH` or `FFMPEG_PATH` on these hosts.** Those are only for
+> pointing at binaries on your local Windows machine. In the Docker image both
+> tools are already on `PATH`, so leaving the vars unset is correct. (Setting
+> `YTDLP_PATH` to a Windows path is exactly what breaks a cloud deploy.)
+
+---
+
 ## Project structure
 
 ```

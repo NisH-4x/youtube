@@ -1,5 +1,35 @@
 import Downloader from "@/components/Downloader";
 
+/** FAQ content — rendered visibly AND emitted as FAQPage structured data. */
+const FAQ_ITEMS: { q: string; a: string }[] = [
+  {
+    q: "Is this YouTube downloader free?",
+    a: "Yes. It is completely free to use, with no ads, no watermarks and no signup required. Paste a YouTube link, choose a quality, and download.",
+  },
+  {
+    q: "Can I download YouTube videos in 1080p or 4K?",
+    a: "Yes. You can pick any resolution the video offers — 720p, 1080p, 1440p, or 4K. Separate video and audio streams are automatically merged into a single MP4 file.",
+  },
+  {
+    q: "How do I convert a YouTube video to MP3?",
+    a: "Switch the toggle to Audio, choose MP3 (or M4A) and a bitrate up to 320 kbps, then download. The audio track is extracted without downloading the video.",
+  },
+  {
+    q: "Is it safe and legal to use?",
+    a: "The tool is safe — it runs on the open-source yt-dlp project and stores nothing about you. Downloading is intended for personal, offline use; only download content you own or have the right to, as downloading may violate YouTube's Terms of Service.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
+
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-8 px-4 py-12 sm:py-20">
@@ -11,15 +41,38 @@ export default function Home() {
             </svg>
           </span>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            YouTube Downloader
+            YouTube Video Downloader
           </h1>
         </div>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Paste a link, pick a quality, and download the video or audio.
+          Download YouTube videos as MP4 in up to 4K, or extract the audio as
+          MP3 &mdash; free, fast, and without ads or signup.
         </p>
       </header>
 
       <Downloader />
+
+      {/* Crawlable content for SEO */}
+      <section className="space-y-5" aria-labelledby="faq-heading">
+        <h2
+          id="faq-heading"
+          className="text-lg font-semibold tracking-tight text-neutral-800 dark:text-neutral-100"
+        >
+          Frequently asked questions
+        </h2>
+        <div className="space-y-4">
+          {FAQ_ITEMS.map((item) => (
+            <div key={item.q} className="space-y-1">
+              <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                {item.q}
+              </h3>
+              <p className="text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+                {item.a}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <footer className="mt-auto space-y-3 border-t border-neutral-200 pt-6 text-xs text-neutral-400 dark:border-neutral-800 dark:text-neutral-500">
         <p>
@@ -39,6 +92,11 @@ export default function Home() {
           </a>
         </p>
       </footer>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
     </main>
   );
 }

@@ -1,0 +1,19 @@
+# Render Blueprint. In Render: New → Blueprint → connect this repo, and it
+# provisions the service below automatically.
+services:
+  - type: web
+    name: grabmp4
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # Public URL of the deployed site (used for SEO: canonical, sitemap, OG).
+      # Update this to your real URL after the service is created.
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://grabmp4.onrender.com
+      - key: NEXT_PUBLIC_SITE_NAME
+        value: grabmp4
+    # NOTE: do NOT add YTDLP_PATH or FFMPEG_PATH here — both binaries are baked
+    # into the Docker image and already on PATH.
