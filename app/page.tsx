@@ -21,10 +21,23 @@ export default function Home() {
 
       <Downloader />
 
-      <footer className="mt-auto border-t border-neutral-200 pt-6 text-xs text-neutral-400 dark:border-neutral-800 dark:text-neutral-500">
-        For personal, offline use only. Downloading content may violate
-        YouTube&rsquo;s Terms of Service &mdash; you are responsible for how you
-        use this tool.
+      <footer className="mt-auto space-y-3 border-t border-neutral-200 pt-6 text-xs text-neutral-400 dark:border-neutral-800 dark:text-neutral-500">
+        <p>
+          For personal, offline use only. Downloading content may violate
+          YouTube&rsquo;s Terms of Service &mdash; you are responsible for how
+          you use this tool.
+        </p>
+        <p>
+          Built by{" "}
+          <a
+            href="https://nishx.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-red-600 underline-offset-2 transition hover:underline dark:text-red-400"
+          >
+            nishx
+          </a>
+        </p>
       </footer>
     </main>
   );
