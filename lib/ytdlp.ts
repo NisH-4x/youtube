@@ -28,6 +28,25 @@ const YTDLP_BIN = process.env.YTDLP_PATH || "yt-dlp";
  */
 const FFMPEG_PATH = process.env.FFMPEG_PATH || "";
 
+/**
+ * Optional YouTube authentication. When the app runs on a cloud/datacenter IP
+ * (Render, Railway, Fly, etc.) YouTube frequently returns "Sign in to confirm
+ * you're not a bot" and requires cookies from a logged-in session. Set ONE of:
+ *   YTDLP_COOKIES               -> path to a Netscape-format cookies.txt file
+ *   YTDLP_COOKIES_FROM_BROWSER  -> a browser name (only useful for local runs)
+ */
+const YTDLP_COOKIES = process.env.YTDLP_COOKIES || "";
+const YTDLP_COOKIES_FROM_BROWSER = process.env.YTDLP_COOKIES_FROM_BROWSER || "";
+
+/** Cookie/auth argv shared by the info fetch and the download. */
+function authArgs(): string[] {
+  if (YTDLP_COOKIES) return ["--cookies", YTDLP_COOKIES];
+  if (YTDLP_COOKIES_FROM_BROWSER) {
+    return ["--cookies-from-browser", YTDLP_COOKIES_FROM_BROWSER];
+  }
+  return [];
+}
+
 /** Sentinel prefix we emit from yt-dlp's --progress-template so we can find it. */
 const PROGRESS_PREFIX = "[[PROG]]";
 
@@ -125,6 +144,7 @@ export async function fetchVideoInfo(canonicalUrl: string): Promise<VideoInfo> {
       "--dump-single-json",
       "--no-playlist",
       "--no-warnings",
+      ...authArgs(),
       canonicalUrl,
     ],
     INFO_TIMEOUT_MS
@@ -234,6 +254,17 @@ function friendlyError(stderr: string): string {
   }
   if (text.includes("is not a valid url") || text.includes("unsupported url")) {
     return "That URL is not supported.";
+  }
+  if (
+    text.includes("confirm you’re not a bot") ||
+    text.includes("confirm you're not a bot") ||
+    text.includes("sign in to confirm")
+  ) {
+    return (
+      "YouTube is blocking this server's IP and asking for sign-in. Provide " +
+      "YouTube cookies via the YTDLP_COOKIES setting (see README), or run the " +
+      "app from a home/residential connection."
+    );
   }
   // Fall back to the last meaningful ERROR: line, if any.
   const lines = stderr
@@ -469,6 +500,8 @@ function buildDownloadArgs(req: ValidatedDownload, outputTemplate: string): stri
     outputTemplate,
     // Point yt-dlp at ffmpeg explicitly when a path is configured.
     ...(FFMPEG_PATH ? ["--ffmpeg-location", FFMPEG_PATH] : []),
+    // YouTube cookies for cloud/datacenter IPs, when configured.
+    ...authArgs(),
   ];
 
   if (req.kind === "audio") {

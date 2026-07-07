@@ -175,6 +175,45 @@ the same `NEXT_PUBLIC_SITE_URL` env var → deploy.
 
 ---
 
+## YouTube bot check ("Sign in to confirm you're not a bot")
+
+Downloads work fine from home but fail on a cloud host with:
+
+> _Sign in to confirm you're not a bot. Use --cookies-from-browser or --cookies…_
+
+This is **not a bug** — YouTube blocks requests from datacenter IPs (Render,
+Railway, Fly, AWS, Vercel…) and demands cookies from a logged-in session. Your
+local machine works because it has a trusted residential IP.
+
+Two ways to fix it:
+
+**A) Provide YouTube cookies (works on any cloud host)**
+
+1. **Use a throwaway/secondary Google account** — there is a small risk YouTube
+   flags an account used for automated downloads. Don't use your main account.
+2. Log into that account on YouTube in your browser, then export cookies with an
+   extension like **"Get cookies.txt LOCALLY"** → save `youtube-cookies.txt`.
+3. On **Render**: Service → **Environment** → **Secret Files** → add a file named
+   `youtube-cookies.txt` and paste its contents. Render mounts it at
+   `/etc/secrets/youtube-cookies.txt`.
+4. Add an env var: `YTDLP_COOKIES=/etc/secrets/youtube-cookies.txt`
+5. Redeploy.
+
+The app passes `--cookies $YTDLP_COOKIES` to yt-dlp for both info and download.
+Cookies expire periodically, so you may need to re-export every few weeks.
+
+**B) Run on a residential IP (most reliable, no cookies)**
+
+Host it on a machine at home (a spare PC, a Raspberry Pi, etc.) or any connection
+with a residential IP. YouTube doesn't challenge those, so it "just works" like
+localhost. This avoids the cookie cat-and-mouse entirely.
+
+> `YTDLP_COOKIES_FROM_BROWSER` only helps for **local** runs where a browser is
+> installed — it can't read a browser on a headless server, so use `YTDLP_COOKIES`
+> (a cookies.txt file) in the cloud.
+
+---
+
 ## Project structure
 
 ```
