@@ -31,11 +31,14 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0
 
 # System dependencies:
-#   ffmpeg  — merges video+audio and extracts audio (installed via apt)
-#   yt-dlp  — self-contained Linux binary from the official GitHub release
+#   ffmpeg      — merges video+audio and extracts audio (installed via apt)
+#   yt-dlp_linux — the STANDALONE PyInstaller binary that bundles its own Python.
+#                  (The plain "yt-dlp" asset is a Python zipapp that needs a
+#                  system python3, which this slim image doesn't have — using it
+#                  fails at runtime with "/usr/bin/env: 'python3': No such file".)
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ffmpeg ca-certificates curl \
-  && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+  && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux \
        -o /usr/local/bin/yt-dlp \
   && chmod a+rx /usr/local/bin/yt-dlp \
   && apt-get purge -y curl \
